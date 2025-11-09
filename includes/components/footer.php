@@ -75,8 +75,8 @@
       <div>
         <h3 class="font-semibold text-gray-900 mb-4 text-sm uppercase tracking-wider">Suivez-nous</h3>
         <p class="text-sm text-gray-600 mb-4">
-          <a href="mailto:contact@medecinsruraux.fr" class="hover:text-green-600 transition-colors duration-200">
-            contact@medecinsruraux.fr
+          <a href="mailto:contact@medecinsruraux.com" class="hover:text-green-600 transition-colors duration-200">
+            contact@medecinsruraux.com
           </a>
         </p>
         <div class="flex space-x-3">
@@ -134,10 +134,10 @@
 </footer>
 
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  
   
   footer * {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

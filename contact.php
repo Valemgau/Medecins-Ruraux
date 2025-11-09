@@ -6,7 +6,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 $userId = $_SESSION['user_id'] ?? '';
-$userRole = $_SESSION['user_role'] ?? '';
+$userRole = $_SESSION['role'] ?? '';
 
 $errors = [];
 $success = false;
@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $message = trim($_POST['message'] ?? '');
     $captcha_response = trim($_POST['captcha'] ?? '');
-    $honeypot = trim($_POST['website'] ?? ''); // Champ caché anti-bot
+    $honeypot = trim($_POST['website'] ?? '');
 
     // Vérification honeypot
     if (!empty($honeypot)) {
@@ -60,15 +60,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $mail->Password = $smtpPass;
             $mail->SMTPSecure = ($smtpPort == 465) ? 'ssl' : 'tls';
 
-            $mail->setFrom($smtpUser, 'Site Médecins Ruraux');
+            $mail->setFrom($smtpUser, 'Médecins Ruraux');
             $mail->addAddress($adminEmail);
 
             $mail->CharSet = 'UTF-8';
             $mail->isHTML(true);
-            $mail->Subject = "Nouveau message contact via site";
+            $mail->Subject = "Nouveau message de contact";
 
             $body = "
-                <div style='font-family: Inter, sans-serif; padding: 20px;'>
+                <div style='font-family: system-ui, -apple-system, sans-serif; padding: 20px;'>
                     <h2 style='color: #22c55e;'>Nouveau message de contact</h2>
                     <p><strong>Nom :</strong> " . htmlspecialchars($nom) . "</p>
                     <p><strong>Email :</strong> " . htmlspecialchars($email) . "</p>
@@ -119,15 +119,11 @@ ob_start();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($title) ?></title>
     
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
         * {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
@@ -135,6 +131,7 @@ ob_start();
         body {
             margin: 0;
             padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
         
         .background-image {
@@ -153,20 +150,23 @@ ob_start();
             position: fixed;
             inset: 0;
             background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(2px);
             z-index: 1;
         }
         
         .form-card {
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.97);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
         }
         
         .input-field {
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             background: #f9fafb;
-            border: 1px solid #e5e7eb;
+            border: 2px solid #e5e7eb;
+            font-size: 15px;
         }
         
         .input-field:hover {
@@ -177,34 +177,56 @@ ob_start();
         .input-field:focus {
             outline: none;
             background: white;
-            border-color: #4ade80;
-            box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.1);
+            border-color: #10b981;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
-            transition: all 0.2s ease;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-primary:hover::before {
+            left: 100%;
         }
         
         .btn-primary:hover {
-            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 8px 16px rgba(34, 197, 94, 0.25);
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(16, 185, 129, 0.3);
         }
         
         .btn-primary:active {
             transform: translateY(0);
         }
         
-        .back-button {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            transition: all 0.2s ease;
+        .icon-container {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
         }
         
-        .back-button:hover {
-            background: rgba(255, 255, 255, 1);
-            transform: translateY(-1px);
+        .captcha-box {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); }
+            50% { box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4); }
         }
         
         .honeypot {
@@ -218,22 +240,32 @@ ob_start();
         @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(30px) scale(0.95);
             }
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0) scale(1);
             }
         }
         
         .fade-in {
-            animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .label-text {
+            font-weight: 600;
+            letter-spacing: -0.01em;
         }
         
         @media (max-width: 640px) {
-            .back-button {
-                top: 1rem !important;
-                left: 1rem !important;
+            .form-card {
+                border-radius: 1.5rem !important;
+                padding: 2rem !important;
+            }
+            
+            .icon-container {
+                width: 4.5rem !important;
+                height: 4.5rem !important;
             }
         }
     </style>
@@ -250,32 +282,25 @@ ob_start();
     <div class="background-overlay"></div>
     
     <!-- Contenu -->
-    <div class="relative z-10 min-h-screen flex items-center justify-center p-4 pt-20 sm:pt-8 py-12">
-        
-        <!-- Bouton retour -->
-        <button onclick="history.back()" class="back-button fixed top-6 left-6 w-11 h-11 flex items-center justify-center rounded-full text-gray-700 hover:text-gray-900 shadow-lg z-20">
-            <i class="fas fa-arrow-left"></i>
-        </button>
+    <div class="relative z-10 min-h-screen flex items-center justify-center p-4 pt-24 pb-12">
         
         <!-- Formulaire -->
-        <div class="form-card w-full max-w-xl rounded-3xl shadow-2xl p-8 sm:p-12 fade-in">
+        <div class="form-card w-full max-w-2xl rounded-3xl p-10 sm:p-14 fade-in">
             
             <!-- Icône -->
-            <div class="mb-8 flex justify-center">
-                <div class="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg">
-                    <svg class="w-10 h-10" fill="black" viewBox="0 0 24 24">
-                        <path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
-                    </svg>
+            <div class="mb-10 flex justify-center">
+                <div class="icon-container w-24 h-24 rounded-2xl flex items-center justify-center">
+                    <i class="fas fa-envelope text-white text-4xl"></i>
                 </div>
             </div>
             
             <!-- Titre -->
-            <div class="text-center mb-8">
-                <h1 class="text-3xl sm:text-4xl font-semibold text-gray-900 mb-2 tracking-tight">
+            <div class="text-center mb-10">
+                <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 mb-3 tracking-tight">
                     Contactez-nous
                 </h1>
-                <p class="text-gray-600 text-base font-light">
-                    Nous sommes là pour vous aider
+                <p class="text-gray-600 text-lg font-normal">
+                    Une question ? Nous sommes là pour vous répondre
                 </p>
             </div>
 
@@ -286,17 +311,17 @@ ob_start();
                             icon: 'error',
                             title: 'Erreur',
                             html: `
-                                <div style="text-align:left; padding-left: 1rem;">
+                                <div style="text-align:left; padding: 0 1rem;">
                                     <?php foreach ($errors as $error): ?>
-                                        <p style="margin-bottom: 0.5rem; color: #6b7280;"><?= htmlspecialchars($error) ?></p>
+                                        <p style="margin-bottom: 0.5rem; color: #6b7280; font-size: 15px;">• <?= htmlspecialchars($error) ?></p>
                                     <?php endforeach; ?>
                                 </div>
                             `,
                             confirmButtonText: 'Compris',
-                            confirmButtonColor: '#22c55e',
+                            confirmButtonColor: '#10b981',
                             customClass: {
                                 popup: 'rounded-3xl',
-                                confirmButton: 'rounded-full px-8'
+                                confirmButton: 'rounded-full px-8 py-3'
                             }
                         });
                     });
@@ -310,27 +335,29 @@ ob_start();
                             icon: 'success',
                             title: 'Message envoyé !',
                             text: 'Nous vous répondrons dans les plus brefs délais.',
-                            confirmButtonText: 'OK',
-                            confirmButtonColor: '#22c55e',
+                            confirmButtonText: 'Parfait',
+                            confirmButtonColor: '#10b981',
                             customClass: {
                                 popup: 'rounded-3xl',
-                                confirmButton: 'rounded-full px-8'
+                                confirmButton: 'rounded-full px-8 py-3'
                             }
+                        }).then(() => {
+                            window.location.href = 'index.php';
                         });
                     });
                 </script>
             <?php endif; ?>
 
             <!-- Formulaire -->
-            <form method="post" novalidate class="space-y-5">
+            <form method="post" novalidate class="space-y-6">
                 
-                <!-- Honeypot (champ caché anti-bot) -->
+                <!-- Honeypot -->
                 <input type="text" name="website" class="honeypot" tabindex="-1" autocomplete="off">
                 
                 <!-- Nom -->
                 <div>
-                    <label for="nom" class="block mb-2 font-medium text-gray-900 text-sm">
-                        Nom complet
+                    <label for="nom" class="label-text block mb-2.5 text-gray-900 text-sm">
+                        Nom complet <span class="text-red-500">*</span>
                     </label>
                     <input 
                         id="nom" 
@@ -339,14 +366,14 @@ ob_start();
                         required 
                         value="<?= htmlspecialchars($_POST['nom'] ?? '') ?>"
                         placeholder="Jean Dupont"
-                        class="input-field w-full px-4 py-3.5 rounded-full text-base"
+                        class="input-field w-full px-5 py-4 rounded-2xl"
                     />
                 </div>
                 
                 <!-- Email -->
                 <div>
-                    <label for="email" class="block mb-2 font-medium text-gray-900 text-sm">
-                        Adresse email
+                    <label for="email" class="label-text block mb-2.5 text-gray-900 text-sm">
+                        Adresse email <span class="text-red-500">*</span>
                     </label>
                     <input 
                         id="email" 
@@ -355,32 +382,32 @@ ob_start();
                         required
                         value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
                         placeholder="nom@exemple.fr"
-                        class="input-field w-full px-4 py-3.5 rounded-full text-base"
+                        class="input-field w-full px-5 py-4 rounded-2xl"
                     />
                 </div>
                 
                 <!-- Message -->
                 <div>
-                    <label for="message" class="block mb-2 font-medium text-gray-900 text-sm">
-                        Votre message
+                    <label for="message" class="label-text block mb-2.5 text-gray-900 text-sm">
+                        Votre message <span class="text-red-500">*</span>
                     </label>
                     <textarea 
                         id="message" 
                         name="message" 
-                        rows="5" 
+                        rows="6" 
                         required
-                        placeholder="Décrivez votre demande..."
-                        class="input-field w-full px-4 py-3.5 rounded-3xl text-base resize-none"
+                        placeholder="Décrivez votre demande en détail..."
+                        class="input-field w-full px-5 py-4 rounded-2xl resize-none"
                     ><?= htmlspecialchars($_POST['message'] ?? '') ?></textarea>
                 </div>
 
                 <!-- Captcha mathématique -->
                 <div>
-                    <label for="captcha" class="block mb-2 font-medium text-gray-900 text-sm">
-                        Vérification anti-robot
+                    <label for="captcha" class="label-text block mb-2.5 text-gray-900 text-sm">
+                        Vérification de sécurité <span class="text-red-500">*</span>
                     </label>
-                    <div class="flex items-center space-x-3">
-                        <div class="flex-shrink-0 bg-gradient-to-br from-green-400 to-green-600  font-semibold px-6 py-3.5 rounded-full text-base min-w-[140px] text-center shadow-lg">
+                    <div class="flex items-center gap-4">
+                        <div class="captcha-box flex-shrink-0 text-white font-bold px-8 py-4 rounded-2xl text-lg min-w-[160px] text-center">
                             <?php echo $_SESSION['captcha_num1']; ?> + <?php echo $_SESSION['captcha_num2']; ?> = ?
                         </div>
                         <input 
@@ -388,19 +415,27 @@ ob_start();
                             name="captcha" 
                             type="number" 
                             required
-                            placeholder="Réponse"
-                            class="input-field flex-1 px-4 py-3.5 rounded-full text-base"
+                            placeholder="Votre réponse"
+                            class="input-field flex-1 px-5 py-4 rounded-2xl"
                         />
                     </div>
-                    <p class="mt-2 text-xs text-gray-500">Résolvez ce calcul pour vérifier que vous n'êtes pas un robot</p>
+                    <p class="mt-2.5 text-xs text-gray-500">Résolvez ce calcul simple pour confirmer que vous êtes humain</p>
                 </div>
                 
                 <!-- Bouton submit -->
-                <button type="submit" class="btn-primary w-full  font-semibold py-3.5 rounded-full text-base shadow-lg mt-6">
+                <button type="submit" class="btn-primary w-full text-white font-semibold py-4 rounded-2xl text-base shadow-lg mt-8 relative">
                     <i class="fas fa-paper-plane mr-2"></i>
                     Envoyer le message
                 </button>
             </form>
+            
+            <!-- Info supplémentaire -->
+            <div class="mt-8 pt-8 border-t border-gray-200 text-center">
+                <p class="text-sm text-gray-600">
+                    <i class="fas fa-lock mr-2 text-green-600"></i>
+                    Vos données sont protégées et ne seront jamais partagées
+                </p>
+            </div>
             
         </div>
     </div>

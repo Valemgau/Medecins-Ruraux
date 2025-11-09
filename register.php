@@ -25,6 +25,8 @@ function sendVerificationEmail(
     string $baseUrl
 ): bool {
     $verifyUrl = $baseUrl . "/verify_email.php?token=$token";
+    $logoPath = $_SERVER['DOCUMENT_ROOT'] . '/assets/img/logo.jpg';
+    
     $mail = new PHPMailer(true);
     try {
         $mail->isSMTP();
@@ -42,6 +44,8 @@ function sendVerificationEmail(
         $mail->isHTML(true);
         $mail->Subject = "Validation de votre adresse email";
 
+        $mail->addEmbeddedImage($logoPath, 'logo_cid', 'logo.jpg');
+
         $mail->Body = '
 <!DOCTYPE html>
 <html lang="fr">
@@ -51,6 +55,7 @@ function sendVerificationEmail(
   <style>
     body { margin: 0; padding: 0; background-color: #22c55e; font-family: Inter, sans-serif; color: #111827; }
     .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 24px; padding: 40px; text-align: center; box-shadow: 0 4px 18px rgba(0,0,0,0.1); }
+    .logo { width: 80px; height: 80px; border-radius: 9999px; margin-bottom: 20px; }
     h1 { color: #22c55e; margin-bottom: 20px; font-weight: 600; font-size: 28px; }
     p { font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: #6b7280; }
     a.button { background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%); color: white; padding: 14px 32px; border-radius: 50px; font-weight: 600; text-decoration: none; display: inline-block; }
@@ -59,6 +64,7 @@ function sendVerificationEmail(
 </head>
 <body>
   <div class="container">
+    <img src="cid:logo_cid" alt="Logo" class="logo" />
     <h1>Bienvenue !</h1>
     <p>Merci pour votre inscription. Veuillez activer votre compte en cliquant sur le bouton ci-dessous :</p>
     <p><a href="' . $verifyUrl . '" class="button">Valider mon compte</a></p>
@@ -74,6 +80,7 @@ function sendVerificationEmail(
         return false;
     }
 }
+
 
 $allowedRoles = ['candidat', 'recruteur'];
 $role = $_GET['role'] ?? 'candidat';
@@ -171,7 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 sendVerificationEmail($email, $prenom, $nom, $verifyToken, $smtpHost, $smtpPort, $smtpUser, $smtpPass, $adminEmail, $baseUrl);
 
                 $_SESSION['user_id'] = $userId;
-                $_SESSION['user_role'] = $role;
+                $_SESSION['role'] = $role;
                 header("Location: dashboard-$role.php?message=register_success");
                 exit;
             } catch (Exception $e) {
@@ -193,104 +200,126 @@ ob_start();
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($title) ?></title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
+
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
         * {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
-        
+
         body {
             margin: 0;
             padding: 0;
         }
-        
+
         .background-image {
             position: fixed;
             inset: 0;
             z-index: 0;
         }
-        
+
         .background-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            /* Positionnement du background à gauche sur desktop */
+            object-position: 35% center;
         }
-        
+
+        /* Layout pour desktop - formulaire à droite */
+        @media (min-width: 1024px) {
+            .content-wrapper {
+                justify-content: flex-end;
+                padding-right: 8%;
+            }
+
+            .background-image img {
+                object-position: 30% center;
+            }
+        }
+
+        @media (min-width: 1280px) {
+            .content-wrapper {
+                padding-right: 10%;
+            }
+
+            .background-image img {
+                object-position: 25% center;
+            }
+        }
+
         .background-overlay {
             position: fixed;
             inset: 0;
             background: rgba(0, 0, 0, 0.5);
             z-index: 1;
         }
-        
+
         .form-card {
             background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
-        
+
         .input-field {
             transition: all 0.2s ease;
             background: #f9fafb;
-            border: 1px solid #e5e7eb;
+            border: 2px solid lightgray;
         }
-        
+
         .input-field:hover {
             background: #f3f4f6;
             border-color: #d1d5db;
         }
-        
+
         .input-field:focus {
             outline: none;
             background: white;
             border-color: #4ade80;
             box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.1);
         }
-        
+
         .btn-primary {
             background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
             transition: all 0.2s ease;
         }
-        
+
         .btn-primary:hover {
             background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
             transform: translateY(-1px);
             box-shadow: 0 8px 16px rgba(34, 197, 94, 0.25);
         }
-        
+
         .back-button {
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(10px);
             transition: all 0.2s ease;
         }
-        
+
         .back-button:hover {
             background: rgba(255, 255, 255, 1);
             transform: translateY(-1px);
         }
-        
+
         /* Toggle Switch */
         .toggle-switch {
             position: relative;
             width: 48px;
             height: 24px;
         }
-        
+
         .toggle-switch input {
             opacity: 0;
             width: 0;
             height: 0;
         }
-        
+
         .toggle-slider {
             position: absolute;
             cursor: pointer;
@@ -299,7 +328,7 @@ ob_start();
             transition: 0.3s;
             border-radius: 24px;
         }
-        
+
         .toggle-slider:before {
             position: absolute;
             content: "";
@@ -311,74 +340,87 @@ ob_start();
             transition: 0.3s;
             border-radius: 50%;
         }
-        
-        input:checked + .toggle-slider {
+
+        input:checked+.toggle-slider {
             background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
         }
-        
-        input:checked + .toggle-slider:before {
+
+        input:checked+.toggle-slider:before {
             transform: translateX(24px);
         }
-        
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
-        
+
         .fade-in {
             animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         @media (max-width: 640px) {
             .back-button {
                 top: 1rem !important;
                 left: 1rem !important;
+            }
+
+            .form-card {
+                margin-top: 4rem;
+            }
+
+            .background-image img {
+                object-position: center center;
             }
         }
     </style>
 </head>
 
 <body class="bg-white">
-    
+
     <!-- Image de fond -->
     <div class="background-image">
-        <img src="assets/img/doctor2.jpg" alt="Medical background" onerror="this.parentElement.style.background='linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'" />
+        <img src="assets/img/doctor2.jpg" alt="Medical background"
+            onerror="this.parentElement.style.background='linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'" />
     </div>
-    
+
     <!-- Overlay -->
     <div class="background-overlay"></div>
-    
+
     <!-- Contenu -->
-    <div class="relative z-10 min-h-screen flex items-center justify-center p-4 pt-20 sm:pt-8 py-12">
-        
+    <div class="content-wrapper relative z-10 min-h-screen flex items-center justify-center p-4 sm:pt-4">
+
         <!-- Bouton retour -->
-        <button onclick="history.back()" class="back-button fixed top-6 left-6 w-11 h-11 flex items-center justify-center rounded-full text-gray-700 hover:text-gray-900 shadow-lg z-20">
+        <button onclick="history.back()"
+            class="back-button fixed top-6 left-6 w-11 h-11 flex items-center justify-center rounded-full text-gray-700 hover:text-gray-900 shadow-lg z-20">
             <i class="fas fa-arrow-left"></i>
         </button>
-        
+
         <!-- Formulaire -->
         <div class="form-card w-full max-w-2xl rounded-3xl shadow-2xl p-8 sm:p-12 fade-in max-h-[85vh] overflow-y-auto">
-            
+
             <!-- Logo -->
             <div class="mb-6 flex justify-center">
-                <div class="w-16 h-16 rounded-3xl overflow-hidden bg-gradient-to-br from-green-400 to-green-600 shadow-lg">
-                    <img src="assets/img/logo.jpg" alt="Logo" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-green-400 to-green-600\'><i class=\'fas fa-user-md text-white text-xl\'></i></div>'" />
+                <div
+                    class="w-16 h-16 rounded-3xl overflow-hidden bg-gradient-to-br from-green-400 to-green-600 shadow-lg">
+                    <img src="assets/img/logo.jpg" alt="Logo" class="w-full h-full object-cover"
+                        onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-green-400 to-green-600\'><i class=\'fas fa-user-md text-white text-xl\'></i></div>'" />
                 </div>
             </div>
-            
+
             <!-- Titre -->
             <div class="text-center mb-8">
                 <h1 class="text-3xl sm:text-4xl font-semibold text-gray-900 mb-2 tracking-tight">
-                    Inscription
+                    <?= $role === 'recruteur' ? 'Créer un compte recruteur' : 'Créer un compte candidat' ?>
                 </h1>
                 <p class="text-gray-600 text-base font-light">
-                    <?= $role === 'recruteur' ? 'Créer un compte recruteur' : 'Créer un compte candidat' ?>
+                    Inscription
                 </p>
             </div>
 
@@ -427,8 +469,7 @@ ob_start();
                     <div id="location_select_mode" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label for="pays" class="block mb-2 font-medium text-gray-900 text-sm">Pays</label>
-                            <select id="pays" name="pays"
-                                class="input-field w-full px-4 py-3.5 rounded-full text-base">
+                            <select id="pays" name="pays" class="input-field w-full px-4 py-3.5 rounded-full text-base">
                                 <option value="">Chargement...</option>
                             </select>
                             <input type="hidden" name="pays_nom" id="pays_nom" />
@@ -446,15 +487,14 @@ ob_start();
                     <div id="location_manual_mode" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label for="pays_manual" class="block mb-2 font-medium text-gray-900 text-sm">Pays</label>
-                            <input type="text" id="pays_manual" 
+                            <input type="text" id="pays_manual"
                                 class="input-field w-full px-4 py-3.5 rounded-full text-base"
                                 placeholder="Ex: France" />
                         </div>
                         <div>
                             <label for="ville_manual" class="block mb-2 font-medium text-gray-900 text-sm">Ville</label>
                             <input type="text" id="ville_manual"
-                                class="input-field w-full px-4 py-3.5 rounded-full text-base"
-                                placeholder="Ex: Paris" />
+                                class="input-field w-full px-4 py-3.5 rounded-full text-base" placeholder="Ex: Paris" />
                         </div>
                     </div>
                 </div>
@@ -481,7 +521,7 @@ ob_start();
                 <!-- Section: Informations professionnelles -->
                 <div class="space-y-4">
                     <h2 class="text-lg font-semibold text-gray-900">Informations professionnelles</h2>
-                    
+
                     <?php if ($role === 'candidat'): ?>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
@@ -492,7 +532,8 @@ ob_start();
                             </div>
                             <div>
                                 <div class="flex items-center justify-between mb-2">
-                                    <label for="delai_preavis" class="font-medium text-gray-900 text-sm">Préavis (mois)</label>
+                                    <label for="delai_preavis" class="font-medium text-gray-900 text-sm">Préavis
+                                        (mois)</label>
                                     <label class="flex items-center space-x-2 cursor-pointer">
                                         <span class="text-xs text-gray-500">Saisir</span>
                                         <div class="toggle-switch scale-75">
@@ -507,7 +548,7 @@ ob_start();
                                         <option value="<?= $i ?>"><?= $i ?> mois</option>
                                     <?php endfor; ?>
                                 </select>
-                                <input type="number" id="delai_preavis_manual" min="0" max="12"
+                                <input type="number" id="delai_preavis_manual" min="0" max="60"
                                     class="input-field w-full px-4 py-3.5 rounded-full text-base hidden"
                                     placeholder="Nombre de mois" />
                             </div>
@@ -515,7 +556,8 @@ ob_start();
                     <?php else: ?>
                         <div class="space-y-4">
                             <div>
-                                <label for="etablissement" class="block mb-2 font-medium text-gray-900 text-sm">Établissement</label>
+                                <label for="etablissement"
+                                    class="block mb-2 font-medium text-gray-900 text-sm">Établissement</label>
                                 <input id="etablissement" name="etablissement" type="text" required
                                     value="<?= clean_string($_POST['etablissement'] ?? '') ?>"
                                     class="input-field w-full px-4 py-3.5 rounded-full text-base" />
@@ -534,7 +576,8 @@ ob_start();
                                     <label class="flex items-center space-x-2 cursor-pointer">
                                         <span class="text-sm text-gray-600">Saisie manuelle</span>
                                         <div class="toggle-switch">
-                                            <input type="checkbox" id="toggle_location_etab" onchange="toggleLocationEtabMode()">
+                                            <input type="checkbox" id="toggle_location_etab"
+                                                onchange="toggleLocationEtabMode()">
                                             <span class="toggle-slider"></span>
                                         </div>
                                     </label>
@@ -543,7 +586,8 @@ ob_start();
                                 <!-- Mode sélection établissement -->
                                 <div id="location_etab_select_mode" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label for="pays_etablissement" class="block mb-2 font-medium text-gray-900 text-sm">Pays</label>
+                                        <label for="pays_etablissement"
+                                            class="block mb-2 font-medium text-gray-900 text-sm">Pays</label>
                                         <select id="pays_etablissement" name="pays_etablissement"
                                             class="input-field w-full px-4 py-3.5 rounded-full text-base">
                                             <option value="">Chargement...</option>
@@ -551,7 +595,8 @@ ob_start();
                                         <input type="hidden" name="pays_etablissement_nom" id="pays_etablissement_nom" />
                                     </div>
                                     <div>
-                                        <label for="ville_etablissement" class="block mb-2 font-medium text-gray-900 text-sm">Ville</label>
+                                        <label for="ville_etablissement"
+                                            class="block mb-2 font-medium text-gray-900 text-sm">Ville</label>
                                         <select id="ville_etablissement" name="ville_etablissement" disabled
                                             class="input-field w-full px-4 py-3.5 rounded-full text-base">
                                             <option value="">Choisir un pays d'abord</option>
@@ -562,13 +607,15 @@ ob_start();
                                 <!-- Mode saisie manuelle établissement -->
                                 <div id="location_etab_manual_mode" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label for="pays_etablissement_manual" class="block mb-2 font-medium text-gray-900 text-sm">Pays</label>
+                                        <label for="pays_etablissement_manual"
+                                            class="block mb-2 font-medium text-gray-900 text-sm">Pays</label>
                                         <input type="text" id="pays_etablissement_manual"
                                             class="input-field w-full px-4 py-3.5 rounded-full text-base"
                                             placeholder="Ex: France" />
                                     </div>
                                     <div>
-                                        <label for="ville_etablissement_manual" class="block mb-2 font-medium text-gray-900 text-sm">Ville</label>
+                                        <label for="ville_etablissement_manual"
+                                            class="block mb-2 font-medium text-gray-900 text-sm">Ville</label>
                                         <input type="text" id="ville_etablissement_manual"
                                             class="input-field w-full px-4 py-3.5 rounded-full text-base"
                                             placeholder="Ex: Paris" />
@@ -590,12 +637,14 @@ ob_start();
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label for="password" class="block mb-2 font-medium text-gray-900 text-sm">Mot de passe</label>
+                            <label for="password" class="block mb-2 font-medium text-gray-900 text-sm">Mot de
+                                passe</label>
                             <input id="password" name="password" type="password" required
                                 class="input-field w-full px-4 py-3.5 rounded-full text-base" />
                         </div>
                         <div>
-                            <label for="confirm_password" class="block mb-2 font-medium text-gray-900 text-sm">Confirmer</label>
+                            <label for="confirm_password"
+                                class="block mb-2 font-medium text-gray-900 text-sm">Confirmer</label>
                             <input id="confirm_password" name="confirm_password" type="password" required
                                 class="input-field w-full px-4 py-3.5 rounded-full text-base" />
                         </div>
@@ -603,7 +652,8 @@ ob_start();
                 </div>
 
                 <!-- Bouton submit -->
-                <button type="submit" class="btn-primary w-full text-white font-semibold py-3.5 rounded-full text-base shadow-lg">
+                <button type="submit"
+                    class="btn-primary w-full text-white font-semibold py-3.5 rounded-full text-base shadow-lg">
                     Créer mon compte
                 </button>
 
@@ -617,7 +667,7 @@ ob_start();
                     </a>
                 </div>
             </form>
-            
+
         </div>
     </div>
 
@@ -627,7 +677,7 @@ ob_start();
             const checked = document.getElementById('toggle_location').checked;
             document.getElementById('location_select_mode').classList.toggle('hidden', checked);
             document.getElementById('location_manual_mode').classList.toggle('hidden', !checked);
-            
+
             if (checked) {
                 document.getElementById('pays').removeAttribute('name');
                 document.getElementById('ville').removeAttribute('name');
@@ -645,7 +695,7 @@ ob_start();
             const checked = document.getElementById('toggle_location_etab').checked;
             document.getElementById('location_etab_select_mode').classList.toggle('hidden', checked);
             document.getElementById('location_etab_manual_mode').classList.toggle('hidden', !checked);
-            
+
             if (checked) {
                 document.getElementById('pays_etablissement').removeAttribute('name');
                 document.getElementById('ville_etablissement').removeAttribute('name');
@@ -663,10 +713,10 @@ ob_start();
             const checked = document.getElementById('toggle_preavis').checked;
             const selectEl = document.getElementById('delai_preavis');
             const manualEl = document.getElementById('delai_preavis_manual');
-            
+
             selectEl.classList.toggle('hidden', checked);
             manualEl.classList.toggle('hidden', !checked);
-            
+
             if (checked) {
                 selectEl.removeAttribute('name');
                 manualEl.setAttribute('name', 'delai_preavis');
@@ -678,53 +728,54 @@ ob_start();
 
         // Load countries
         async function loadCountries() {
-            try {
-                const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2');
-                const countries = await response.json();
-                countries.sort((a, b) => a.name.common.localeCompare(b.name.common));
-                
-                let options = '<option value="">Choisir un pays</option>';
-                countries.forEach(country => {
-                    options += `<option value="${country.cca2}" data-nom="${country.name.common}">${country.name.common}</option>`;
-                });
-                
-                document.getElementById('pays').innerHTML = options;
-                const paysEtab = document.getElementById('pays_etablissement');
-                if (paysEtab) paysEtab.innerHTML = options;
-            } catch (e) {
-                console.error('Erreur chargement pays:', e);
-            }
-        }
+    try {
+        const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2,translations');
+        const countries = await response.json();
+        countries.sort((a, b) => a.translations.fra.common.localeCompare(b.translations.fra.common));
+
+        let options = '<option value="">Choisir un pays</option>';
+        countries.forEach(country => {
+            const nomFr = country.translations.fra.common;
+            options += `<option value="${country.cca2}" data-nom="${nomFr}">${nomFr}</option>`;
+        });
+
+        document.getElementById('pays').innerHTML = options;
+        const paysEtab = document.getElementById('pays_etablissement');
+        if (paysEtab) paysEtab.innerHTML = options;
+    } catch (e) {
+        console.error('Erreur chargement pays:', e);
+    }
+}
 
         // Load cities
-        async function loadCities(countryCode, villeSelectId) {
-            const villeSelect = document.getElementById(villeSelectId);
-            villeSelect.innerHTML = '<option value="">Chargement...</option>';
-            villeSelect.disabled = true;
+       async function loadCities(countryCode, villeSelectId) {
+    const villeSelect = document.getElementById(villeSelectId);
+    villeSelect.innerHTML = '<option value="">Chargement...</option>';
+    villeSelect.disabled = true;
 
-            try {
-                const url = `https://secure.geonames.org/searchJSON?country=${countryCode}&featureClass=P&maxRows=100&username=sunderr`;
-                const response = await fetch(url);
-                const data = await response.json();
+    try {
+        const url = `https://secure.geonames.org/searchJSON?country=${countryCode}&featureClass=P&maxRows=100&orderby=population&lang=fr&username=sunderr`;
+        const response = await fetch(url);
+        const data = await response.json();
 
-                if (data.geonames && data.geonames.length > 0) {
-                    let options = '<option value="">Choisir une ville</option>';
-                    data.geonames.forEach(city => {
-                        options += `<option value="${city.name}">${city.name}</option>`;
-                    });
-                    villeSelect.innerHTML = options;
-                    villeSelect.disabled = false;
-                } else {
-                    villeSelect.innerHTML = '<option value="">Aucune ville trouvée</option>';
-                }
-            } catch (e) {
-                villeSelect.innerHTML = '<option value="">Erreur de chargement</option>';
-                console.error(e);
-            }
+        if (data.geonames && data.geonames.length > 0) {
+            let options = '<option value="">Choisir une ville</option>';
+            data.geonames.forEach(city => {
+                options += `<option value="${city.name}">${city.name}</option>`;
+            });
+            villeSelect.innerHTML = options;
+            villeSelect.disabled = false;
+        } else {
+            villeSelect.innerHTML = '<option value="">Aucune ville trouvée</option>';
         }
+    } catch (e) {
+        villeSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+        console.error(e);
+    }
+}
 
         // Event listeners
-        document.getElementById('pays').addEventListener('change', function() {
+        document.getElementById('pays').addEventListener('change', function () {
             const option = this.selectedOptions[0];
             document.getElementById('pays_nom').value = option ? option.dataset.nom : '';
             if (this.value) {
@@ -734,7 +785,7 @@ ob_start();
 
         const paysEtab = document.getElementById('pays_etablissement');
         if (paysEtab) {
-            paysEtab.addEventListener('change', function() {
+            paysEtab.addEventListener('change', function () {
                 const option = this.selectedOptions[0];
                 document.getElementById('pays_etablissement_nom').value = option ? option.dataset.nom : '';
                 if (this.value) {
@@ -748,6 +799,7 @@ ob_start();
     </script>
 
 </body>
+
 </html>
 
 <?php

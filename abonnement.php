@@ -10,14 +10,13 @@ if (empty($_SESSION['user_id'])) {
 }
 
 $userId = $_SESSION['user_id'];
-$userRole = $_SESSION['user_role'];
+$userRole = $_SESSION['role'];
 
 if ($userRole !== 'recruteur') {
     die("Rôle utilisateur inconnu");
 }
 
-// Récupérer les infos utilisateur pour affichage
-$stmt = $pdo->prepare("SELECT u.email, u.created_at, r.prenom, r.nom, r.photo, u.stripe_customer_id FROM users u JOIN recruteurs r ON u.id = r.id WHERE u.id = ?");
+$stmt = $pdo->prepare("SELECT u.email, u.created_at, r.prenom, r.nom, r.numero_reference, r.photo, u.stripe_customer_id FROM users u JOIN recruteurs r ON u.id = r.id WHERE u.id = ?");
 $stmt->execute([$userId]);
 $user = $stmt->fetch();
 
@@ -25,7 +24,6 @@ if (!$user) {
     die("Utilisateur introuvable");
 }
 
-// Récupérer les tarifs Stripe du produit (remplace par ton vrai ID produit)
 $productId = $productID;
 $pricesList = \Stripe\Price::all([
     'product' => $productId,
@@ -33,19 +31,18 @@ $pricesList = \Stripe\Price::all([
     'limit' => 10,
 ]);
 
-// Associer chaque formule à son price Stripe (via nickname)
 $formules = [
     'Essentielle' => null,
     'Standard' => null,
     'Premium' => null,
 ];
+
 foreach ($pricesList->data as $price) {
     if ($price->nickname === 'Essentielle') $formules['Essentielle'] = $price;
     if ($price->nickname === 'Standard')    $formules['Standard'] = $price;
     if ($price->nickname === 'Premium')     $formules['Premium'] = $price;
 }
 
-// Gestion messages après retour Stripe
 $alert = null;
 if (isset($_GET['success'])) {
     $alert = ['type' => 'success', 'text' => 'Abonnement activé avec succès ! Merci pour votre souscription.'];
@@ -53,14 +50,12 @@ if (isset($_GET['success'])) {
     $alert = ['type' => 'error', 'text' => 'Abonnement annulé ou non finalisé. Vous pouvez retenter à tout moment.'];
 }
 
-// Création session Stripe au clic
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['subscribe'])) {
     $priceId = $_POST['price_id'] ?? null;
     if (!$priceId) {
         die("Tarif non sélectionné.");
     }
 
-    // Créer ou récupérer client Stripe
     $stripeCustomerId = $user['stripe_customer_id'];
     if (!$stripeCustomerId) {
         $customer = \Stripe\Customer::create([
@@ -95,115 +90,242 @@ $title = "Abonnement recruteur";
 ob_start();
 ?>
 
-<div class="md:p-6">
+<style>
+.pricing-card {
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.pricing-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(34, 197, 94, 0.15);
+}
+
+.pricing-card .card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.pricing-card .features-list {
+    flex: 1;
+}
+
+.check-icon {
+    color: #22c55e;
+}
+</style>
+
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+    
     <?php if ($alert): ?>
-        <div class="max-w-7xl mx-auto my-4 px-6">
-            <div class="<?= $alert['type'] === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' ?> p-4 rounded">
-                <?= htmlspecialchars($alert['text']) ?>
+        <div class="max-w-7xl mx-auto mb-6">
+            <div class="<?= $alert['type'] === 'success' ? 'bg-green-50 border-l-4 border-green-500 text-green-800' : 'bg-red-50 border-l-4 border-red-500 text-red-800' ?> p-4 rounded-lg shadow-sm">
+                <div class="flex items-center">
+                    <i class="fas <?= $alert['type'] === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle' ?> mr-3"></i>
+                    <span><?= htmlspecialchars($alert['text']) ?></span>
+                </div>
             </div>
         </div>
     <?php endif; ?>
 
-    <div class="max-w-7xl mx-auto bg-white shadow-lg overflow-hidden">
+    <div class="max-w-7xl mx-auto">
 
-        <div class="md:flex p-8 pb-5 space-x-8">
-            <div class="flex-shrink-0 relative">
-                <?php if (!empty($user['photo'])): ?>
-                    <img src="uploads/<?= htmlspecialchars($user['photo']) ?>" alt="Avatar" style="position: relative; z-index: 1000;" class="h-40 w-40 border-4 border-white object-cover" />
-                <?php else: ?>
-                    <div class="h-40 w-40 border-4 border-white flex items-center justify-center bg-gray-200">
-                        <svg class="h-24 w-24 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <circle cx="12" cy="7" r="5" />
-                            <path d="M12 14c-5 0-7.5 2.5-7.5 5v2h15v-2c0-2.5-2.5-5-7.5-5" />
-                        </svg>
-                    </div>
-                <?php endif; ?>
-            </div>
-            <div class="flex-grow pt-2">
-                <h1 class="text-3xl font-bold text-gray-900">
-                    <?= htmlspecialchars($user['prenom'] . ' ' . $user['nom']) ?>
-                </h1>
-                <p class="text-gray-600 mt-1"><?= htmlspecialchars($user['email']) ?></p>
-                <p class="text-gray-500 mt-2 text-sm">Inscrit depuis le <?= date("d/m/Y", strtotime($user['created_at'])) ?></p>
-            </div>
+        <!-- Titre section -->
+        <div class="text-center mb-12">
+            <h2 class="text-4xl font-bold text-gray-900 mb-3 flex items-center justify-center gap-3">
+                <i class="fas fa-crown text-green-600"></i>
+                Choisissez votre formule
+            </h2>
+            <p class="text-gray-600 text-lg">Trouvez l'abonnement adapté à vos besoins de recrutement</p>
         </div>
 
-        <div class="border-t border-gray-200 px-8 pb-8">
-            <h2 class="text-xl font-semibold my-4">Choisissez votre formule d'abonnement</h2>
+        <!-- Grille des formules -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-center border-collapse border border-gray-300" style="background:white;">
-                    <thead>
-                        <tr>
-                            <th class="text-left p-3 font-bold border-b border-gray-200 bg-gray-50"></th>
-                            <th class="p-3 font-bold border-b border-gray-200 bg-gray-50">Essentielle</th>
-                            <th class="p-3 font-bold border-b border-gray-200 bg-gray-50">Standard</th>
-                            <th class="p-3 font-bold border-b border-gray-200 bg-gray-50">Premium</th>
-                            <th class="p-3 font-bold border-b border-gray-200 bg-gray-50">Entreprise</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="text-left p-3 font-semibold border-b">Tarif mensuel</td>
-                            <td class="p-3 border-b"><?= $formules['Essentielle'] ? number_format($formules['Essentielle']->unit_amount / 100, 2, ',', ' ') . ' € / mois' : '-' ?></td>
-                            <td class="p-3 border-b"><?= $formules['Standard'] ? number_format($formules['Standard']->unit_amount / 100, 2, ',', ' ') . ' € / mois' : '-' ?></td>
-                            <td class="p-3 border-b"><?= $formules['Premium'] ? number_format($formules['Premium']->unit_amount / 100, 2, ',', ' ') . ' € / mois' : '-' ?></td>
-                            <td class="p-3 border-b font-semibold">Sur devis (≥ 1000 €)</td>
-                        </tr>
-                        <tr>
-                            <td class="text-left p-3 font-semibold border-b">Accès aux CV</td>
-                            <td class="p-3 border-b">20 CV consultables / mois</td>
-                            <td class="p-3 border-b">Accès illimité</td>
-                            <td class="p-3 border-b">Accès illimité</td>
-                            <td class="p-3 border-b">Accès illimité</td>
-                        </tr>
-                       
-                        <tr>
-                            <td class="text-left p-3 font-semibold border-b">Filtres avancés<br>(pays, disponibilités)</td>
-                            <td class="p-3 border-b">Basique</td>
-                            <td class="p-3 border-b">✔ Standard</td>
-                            <td class="p-3 border-b">✔ Avancé</td>
-                            <td class="p-3 border-b">✔ Personnalisé</td>
-                        </tr>
-                        <tr>
-                            <td class="text-left p-3 font-semibold border-none"></td>
-                            <td class="p-3 border-none">
-                                <?php if ($formules['Essentielle']): ?>
-                                <form method="post">
-                                    <input type="hidden" name="price_id" value="<?= htmlspecialchars($formules['Essentielle']->id) ?>">
-                                    <button type="submit" name="subscribe"
-                                            class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded font-semibold transition">Souscrire</button>
-                                </form>
-                                <?php endif; ?>
-                            </td>
-                            <td class="p-3 border-none">
-                                <?php if ($formules['Standard']): ?>
-                                <form method="post">
-                                    <input type="hidden" name="price_id" value="<?= htmlspecialchars($formules['Standard']->id) ?>">
-                                    <button type="submit" name="subscribe"
-                                            class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded font-semibold transition">Souscrire</button>
-                                </form>
-                                <?php endif; ?>
-                            </td>
-                            <td class="p-3 border-none">
-                                <?php if ($formules['Premium']): ?>
-                                <form method="post">
-                                    <input type="hidden" name="price_id" value="<?= htmlspecialchars($formules['Premium']->id) ?>">
-                                    <button type="submit" name="subscribe"
-                                            class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded font-semibold transition">Souscrire</button>
-                                </form>
-                                <?php endif; ?>
-                            </td>
-                            <td class="p-3 border-none">
-                                <a href="contact.php" class="bg-gray-700 hover:bg-gray-900 text-white px-7 py-2 rounded font-semibold transition block">Contacter</a>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <!-- Formule Essentielle -->
+            <div class="pricing-card bg-white rounded-2xl shadow-lg overflow-hidden border-2 border-gray-200 hover:border-green-400">
+                <div class="bg-gradient-to-br from-gray-50 to-white p-6 border-b border-gray-200">
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Essentielle</h3>
+                    <div class="text-3xl font-bold text-green-600 mb-1">
+                        <?= $formules['Essentielle'] ? number_format($formules['Essentielle']->unit_amount / 100, 0, ',', ' ') : '-' ?>€
+                    </div>
+                    <p class="text-gray-500 text-sm">par mois</p>
+                </div>
+                <div class="card-content p-6">
+                    <ul class="features-list space-y-3 mb-6">
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check check-icon mt-1"></i>
+                            <span class="text-gray-700 text-sm"><strong>20 CV</strong> consultables / mois</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check check-icon mt-1"></i>
+                            <span class="text-gray-700 text-sm">Filtres basiques</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check check-icon mt-1"></i>
+                            <span class="text-gray-700 text-sm">Support email</span>
+                        </li>
+                    </ul>
+                    <?php if ($formules['Essentielle']): ?>
+                    <form method="post" class="mt-auto">
+                        <input type="hidden" name="price_id" value="<?= htmlspecialchars($formules['Essentielle']->id) ?>">
+                        <button type="submit" name="subscribe" 
+                                class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg">
+                            <i class="fas fa-check-circle mr-2"></i>Souscrire
+                        </button>
+                    </form>
+                    <?php endif; ?>
+                </div>
             </div>
-            <p class="mt-4 text-gray-600 text-sm text-center">
-                Après avoir choisi une formule, vous serez redirigé vers Stripe pour finaliser l'abonnement. Offre "Entreprise" sur mesure sur simple contact.
-            </p>
+
+            <!-- Formule Standard -->
+            <div class="pricing-card bg-white rounded-2xl shadow-lg overflow-hidden border-2 border-green-400 relative">
+                <div class="absolute top-4 right-4 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                    Populaire
+                </div>
+                <div class="bg-gradient-to-br from-green-50 to-white p-6 border-b border-green-200">
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Standard</h3>
+                    <div class="text-3xl font-bold text-green-600 mb-1">
+                        <?= $formules['Standard'] ? number_format($formules['Standard']->unit_amount / 100, 0, ',', ' ') : '-' ?>€
+                    </div>
+                    <p class="text-gray-500 text-sm">par mois</p>
+                </div>
+                <div class="card-content p-6">
+                    <ul class="features-list space-y-3 mb-6">
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check check-icon mt-1"></i>
+                            <span class="text-gray-700 text-sm"><strong>CV illimités</strong></span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check check-icon mt-1"></i>
+                            <span class="text-gray-700 text-sm">Filtres standard</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check check-icon mt-1"></i>
+                            <span class="text-gray-700 text-sm">Support prioritaire</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check check-icon mt-1"></i>
+                            <span class="text-gray-700 text-sm">Alertes candidats</span>
+                        </li>
+                    </ul>
+                    <?php if ($formules['Standard']): ?>
+                    <form method="post" class="mt-auto">
+                        <input type="hidden" name="price_id" value="<?= htmlspecialchars($formules['Standard']->id) ?>">
+                        <button type="submit" name="subscribe" 
+                                class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg">
+                            <i class="fas fa-check-circle mr-2"></i>Souscrire
+                        </button>
+                    </form>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Formule Premium -->
+            <div class="pricing-card bg-white rounded-2xl shadow-lg overflow-hidden border-2 border-gray-200 hover:border-green-400">
+                <div class="bg-gradient-to-br from-amber-50 to-white p-6 border-b border-amber-200">
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Premium</h3>
+                    <div class="text-3xl font-bold text-green-600 mb-1">
+                        <?= $formules['Premium'] ? number_format($formules['Premium']->unit_amount / 100, 0, ',', ' ') : '-' ?>€
+                    </div>
+                    <p class="text-gray-500 text-sm">par mois</p>
+                </div>
+                <div class="card-content p-6">
+                    <ul class="features-list space-y-3 mb-6">
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check check-icon mt-1"></i>
+                            <span class="text-gray-700 text-sm"><strong>CV illimités</strong></span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check check-icon mt-1"></i>
+                            <span class="text-gray-700 text-sm">Filtres avancés</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check check-icon mt-1"></i>
+                            <span class="text-gray-700 text-sm">Support dédié 24/7</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check check-icon mt-1"></i>
+                            <span class="text-gray-700 text-sm">Statistiques détaillées</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check check-icon mt-1"></i>
+                            <span class="text-gray-700 text-sm">API accès</span>
+                        </li>
+                    </ul>
+                    <?php if ($formules['Premium']): ?>
+                    <form method="post" class="mt-auto">
+                        <input type="hidden" name="price_id" value="<?= htmlspecialchars($formules['Premium']->id) ?>">
+                        <button type="submit" name="subscribe" 
+                                class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg">
+                            <i class="fas fa-check-circle mr-2"></i>Souscrire
+                        </button>
+                    </form>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Formule Entreprise -->
+            <div class="pricing-card bg-white rounded-2xl shadow-lg overflow-hidden border-2 border-gray-200 hover:border-green-400">
+                <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 border-b border-gray-700">
+                    <h3 class="text-xl font-bold text-white mb-2">Entreprise</h3>
+                    <div class="text-3xl font-bold text-green-400 mb-1">
+                        Sur devis
+                    </div>
+                    <p class="text-gray-300 text-sm">≥ 1000€ / mois</p>
+                </div>
+                <div class="card-content p-6">
+                    <ul class="features-list space-y-3 mb-6">
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check check-icon mt-1"></i>
+                            <span class="text-gray-700 text-sm"><strong>Tout illimité</strong></span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check check-icon mt-1"></i>
+                            <span class="text-gray-700 text-sm">Filtres personnalisés</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check check-icon mt-1"></i>
+                            <span class="text-gray-700 text-sm">Compte manager dédié</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check check-icon mt-1"></i>
+                            <span class="text-gray-700 text-sm">Multi-comptes</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check check-icon mt-1"></i>
+                            <span class="text-gray-700 text-sm">Intégration sur mesure</span>
+                        </li>
+                    </ul>
+                    <a href="contact.php" 
+                       class="mt-auto block w-full text-center bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-800 hover:to-black text-white py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg">
+                        <i class="fas fa-envelope mr-2"></i>Nous contacter
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Note de bas de page -->
+        <div class="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+            <div class="flex items-start gap-4">
+                <div class="flex-shrink-0">
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-info-circle text-green-600 text-xl"></i>
+                    </div>
+                </div>
+                <div class="flex-grow">
+                    <h3 class="font-semibold text-gray-900 mb-2">Informations importantes</h3>
+                    <ul class="text-gray-600 text-sm space-y-1">
+                        <li>• Après avoir choisi une formule, vous serez redirigé vers Stripe pour finaliser l'abonnement</li>
+                        <li>• Tous les paiements sont sécurisés et cryptés</li>
+                        <li>• Vous pouvez annuler votre abonnement à tout moment depuis votre tableau de bord</li>
+                        <li>• Pour l'offre Entreprise, contactez-nous pour un devis personnalisé</li>
+                    </ul>
+                </div>
+            </div>
         </div>
 
     </div>

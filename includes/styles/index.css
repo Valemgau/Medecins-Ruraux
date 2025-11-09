@@ -1,12 +1,9 @@
-@import url("https://fonts.googleapis.com/css2?family=TASA+Explorer:wght@400..800&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap");
 /* Minimal reset compatible Tailwind */
-@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap");
 html {
   box-sizing: border-box;
   scroll-behavior: smooth;
-  font-family: "Bricolage Grotesque", sans-serif !important;
+  font-family: "DM Sans", sans-serif !important;
 }
 
 *,
@@ -16,7 +13,7 @@ html {
 }
 
 body {
-  font-family: "Bricolage Grotesque", sans-serif !important;
+  font-family: "DM Sans", sans-serif !important;
   margin: 0;
   color: #222;
 }
@@ -31,10 +28,6 @@ a:hover,
 a:focus {
   outline-offset: 2px;
 }
-
-/* Inputs, selects, textarea, boutons héritent la font et taille */
-
-/* Radios et checkboxes normalisés sans forcage de couleur */
 
 input[type="radio"],
 input[type="checkbox"] {
@@ -54,8 +47,6 @@ button[type="submit"] {
 input,
 select,
 textarea {
-  border: none;
-  border-bottom: 2px solid #ccc;
   outline: none !important;
   /* background: transparent; */
   padding: 8px;
@@ -64,13 +55,6 @@ textarea {
   transition: border-color 0.3s ease;
   position: relative;
 }
-
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: #f97316;
-}
-
 input:focus::after,
 select:focus::after,
 textarea:focus::after {
@@ -80,7 +64,6 @@ textarea:focus::after {
   bottom: 0;
   height: 2px;
   width: 100%;
-  border-color: #f97316; /* orange */
   animation: slideIn 0.3s forwards;
   pointer-events: none;
 }
@@ -120,31 +103,4 @@ textarea:focus::after {
     width: 100%;
     left: 0;
   }
-}
-
-/* Style personnalisé des suggestions Google Places */
-.pac-container {
-  font-size: 14px;
-  border-radius: 12px !important;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15) !important;
-  background-color: #fff !important;
-  border: 1px solid #f97316 !important; /* couleur primaire */
-  color: #111827 !important;
-}
-.pac-item {
-  padding: 10px 16px !important;
-  border-bottom: 1px solid #eee !important;
-  cursor: pointer;
-}
-.pac-item:hover {
-  background-color: #f97316 !important;
-  color: white !important;
-}
-.pac-item-selected {
-  background-color: #dc2626 !important;
-  color: white !important;
-}
-/* Supprime le contour bleu par défaut au focus */
-input:focus-visible {
-  outline: none;
 }

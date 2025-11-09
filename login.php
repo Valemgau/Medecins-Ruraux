@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = "Une erreur est survenue, vous tentez de vous connecter en tant que candidat alors que votre compte est enregistré en tant que recruteur, ou inversement.";
       } else {
         $_SESSION['user_id'] = $user['id'];
-        $_SESSION['user_role'] = $user['role'];
+        $_SESSION['role'] = $user['role'];
 
         if ($user['role'] === 'admin') {
           header('Location: /admin');
@@ -57,15 +57,15 @@ ob_start();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($title) ?></title>
     
-    <script src="https://cdn.tailwindcss.com"></script>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
         
         * {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
@@ -85,6 +85,8 @@ ob_start();
             width: 100%;
             height: 100%;
             object-fit: cover;
+            /* Positionnement du background à gauche sur desktop */
+            object-position: 35% center;
         }
         
         .background-overlay {
@@ -104,7 +106,7 @@ ob_start();
         .input-field {
             transition: all 0.2s ease;
             background: #f9fafb;
-            border: 2px solid transparent;
+           border: 2px solid lightgray;
         }
         
         .input-field:hover {
@@ -148,6 +150,28 @@ ob_start();
             transform: translateY(-1px);
         }
         
+        /* Layout pour desktop - formulaire à droite */
+        @media (min-width: 1024px) {
+            .content-wrapper {
+                justify-content: flex-end;
+                padding-right: 8%;
+            }
+            
+            .background-image img {
+                object-position: 30% center;
+            }
+        }
+        
+        @media (min-width: 1280px) {
+            .content-wrapper {
+                padding-right: 10%;
+            }
+            
+            .background-image img {
+                object-position: 25% center;
+            }
+        }
+        
         @media (max-width: 640px) {
             .back-button {
                 top: 1rem !important;
@@ -156,6 +180,10 @@ ob_start();
             
             .form-card {
                 margin-top: 4rem;
+            }
+            
+            .background-image img {
+                object-position: center center;
             }
         }
         
@@ -189,14 +217,14 @@ ob_start();
     
     <!-- Image de fond -->
     <div class="background-image">
-        <img src="assets/img/doctor1.jpg" alt="Medical background" onerror="this.parentElement.style.background='linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'" />
+        <img src="assets/img/doctor4.jpg" alt="Medical background" onerror="this.parentElement.style.background='linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'" />
     </div>
     
     <!-- Overlay -->
     <div class="background-overlay"></div>
     
     <!-- Contenu -->
-    <div class="relative z-10 min-h-screen flex items-center justify-center p-4 sm:pt-4">
+    <div class="content-wrapper relative z-10 min-h-screen flex items-center justify-center p-4 sm:pt-4">
         
         <!-- Bouton retour -->
         <button onclick="history.back()" class="back-button fixed top-6 left-6 w-11 h-11 flex items-center justify-center rounded-full text-gray-700 hover:text-gray-900 shadow-lg z-20">
@@ -216,10 +244,10 @@ ob_start();
             <!-- Titre -->
             <div class="text-center mb-8">
                 <h1 class="text-3xl sm:text-4xl font-semibold text-gray-900 mb-2 tracking-tight">
-                    Connexion
+                    <?= $role === 'recruteur' ? 'Espace recruteur' : 'Espace candidat' ?>
                 </h1>
                 <p class="text-gray-600 text-base font-light">
-                    <?= $role === 'recruteur' ? 'Espace recruteur' : 'Espace candidat' ?>
+                    Connexion
                 </p>
             </div>
 

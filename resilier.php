@@ -14,7 +14,7 @@ if (empty($_SESSION['user_id'])) {
 }
 
 $userId = $_SESSION['user_id'];
-$userRole = $_SESSION['user_role'];
+$userRole = $_SESSION['role'];
 
 if ($userRole !== 'recruteur') {
     die("Rôle utilisateur inconnu");
@@ -165,15 +165,15 @@ ob_start();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($title) ?></title>
     
-    <script src="https://cdn.tailwindcss.com"></script>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
         
         * {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
@@ -202,42 +202,6 @@ ob_start();
             </script>
         <?php endif; ?>
 
-        <!-- Breadcrumb -->
-        <nav class="flex items-center space-x-2 text-sm mb-6">
-            <a href="/dashboard-recruteur.php" class="text-gray-500 hover:text-green-600 transition-colors">
-                <i class="fas fa-home"></i>
-            </a>
-            <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
-            <span class="text-gray-900 font-medium">Résiliation d'abonnement</span>
-        </nav>
-
-        <!-- Profil utilisateur -->
-        <div class="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden mb-6">
-            <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-8 py-8">
-                <div class="flex items-center space-x-6">
-                    <div class="flex-shrink-0">
-                        <?php if (!empty($user['photo'])): ?>
-                            <img src="uploads/<?= htmlspecialchars($user['photo']) ?>" alt="Avatar"
-                                class="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg" />
-                        <?php else: ?>
-                            <div class="w-20 h-20 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center border-4 border-white shadow-lg">
-                                <i class="fas fa-user text-white text-2xl"></i>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                    <div class="flex-1">
-                        <h1 class="text-2xl font-bold text-gray-900">
-                            <?= htmlspecialchars($user['prenom'] . ' ' . $user['nom']) ?>
-                        </h1>
-                        <p class="text-gray-600 mt-1"><?= htmlspecialchars($user['email']) ?></p>
-                        <p class="text-sm text-gray-500 mt-2">
-                            <i class="far fa-calendar mr-1"></i>
-                            Membre depuis le <?= date("d/m/Y", strtotime($user['created_at'])) ?>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- Informations abonnement -->
         <div class="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">

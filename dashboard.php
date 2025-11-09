@@ -1,4 +1,4 @@
-<?php $role = $_SESSION['user_role'];
+<?php $role = $_SESSION['role'];
 
 // Redirection selon rôle demandé (admin sans vérification supplémentaire)
 if ($role === 'admin') {

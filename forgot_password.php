@@ -7,7 +7,8 @@ use PHPMailer\PHPMailer\Exception;
 $errors = [];
 $success = false;
 
-function sendResetPasswordEmail($email, $prenom, $nom, $token, $smtpHost, $smtpPort, $smtpUser, $smtpPass, $baseUrl) {
+function sendResetPasswordEmail($email, $prenom, $nom, $token, $smtpHost, $smtpPort, $smtpUser, $smtpPass, $baseUrl)
+{
     $resetUrl = $baseUrl . "/reset_password.php?token=$token";
     $mail = new PHPMailer(true);
     try {
@@ -108,126 +109,154 @@ ob_start();
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($title) ?></title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
+
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
         * {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
-        
+
         body {
             margin: 0;
             padding: 0;
         }
-        
+
         .background-image {
             position: fixed;
             inset: 0;
             z-index: 0;
         }
-        
+
         .background-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        
+
         .background-overlay {
             position: fixed;
             inset: 0;
             background: rgba(0, 0, 0, 0.5);
             z-index: 1;
         }
-        
+
         .form-card {
             background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
-        
+
         .input-field {
             transition: all 0.2s ease;
             background: #f9fafb;
-            border: 1px solid #e5e7eb;
+            border: 2px solid lightgray;
         }
-        
+
         .input-field:hover {
             background: #f3f4f6;
             border-color: #d1d5db;
         }
-        
+
         .input-field:focus {
             outline: none;
             background: white;
             border-color: #4ade80;
             box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.1);
         }
-        
+
         .btn-primary {
             background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
             transition: all 0.2s ease;
         }
-        
+
         .btn-primary:hover {
             background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
             transform: translateY(-1px);
             box-shadow: 0 8px 16px rgba(34, 197, 94, 0.25);
         }
-        
+
         .btn-primary:active {
             transform: translateY(0);
         }
-        
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
-        
+
         .fade-in {
             animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+         .back-button {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            transition: all 0.2s ease;
+        }
+        
+        .back-button:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-1px);
+        }
+        
+        @media (max-width: 640px) {
+            .back-button {
+                top: 1rem !important;
+                left: 1rem !important;
+            }
+            
+            .form-card {
+                margin-top: 4rem;
+            }
         }
     </style>
 </head>
 
 <body class="bg-white">
-    
+
     <!-- Image de fond -->
     <div class="background-image">
-        <img src="assets/img/doctor1.jpg" alt="Medical background" onerror="this.parentElement.style.background='linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'" />
+        <img src="assets/img/doctor1.jpg" alt="Medical background"
+            onerror="this.parentElement.style.background='linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'" />
     </div>
-    
+
     <!-- Overlay -->
     <div class="background-overlay"></div>
-    
+
     <!-- Contenu -->
     <div class="relative z-10 min-h-screen flex items-center justify-center p-4">
-        
+        <button onclick="history.back()"
+            class="back-button fixed top-6 left-6 w-11 h-11 flex items-center justify-center rounded-full text-gray-700 hover:text-gray-900 shadow-lg z-20">
+            <i class="fas fa-arrow-left"></i>
+        </button>
         <!-- Formulaire -->
         <div class="form-card w-full max-w-md rounded-3xl shadow-2xl p-8 sm:p-12 fade-in">
-            
+
             <!-- Icône -->
             <div class="mb-8 flex justify-center">
-                <div class="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg">
+                <div
+                    class="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg">
                     <svg class="w-10 h-10" fill="white" viewBox="0 0 24 24">
-                        <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" stroke="white" stroke-width="0.5"></path>
+                        <path
+                            d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"
+                            stroke="white" stroke-width="0.5"></path>
                     </svg>
                 </div>
             </div>
-            
+
             <!-- Titre -->
             <div class="text-center mb-8">
                 <h1 class="text-3xl sm:text-4xl font-semibold text-gray-900 mb-2 tracking-tight">
@@ -283,22 +312,15 @@ ob_start();
             <?php if (!$success): ?>
                 <!-- Formulaire -->
                 <form method="post" novalidate class="space-y-6">
-                    
+
                     <!-- Email -->
                     <div>
                         <label for="email" class="block mb-2 font-medium text-gray-900 text-sm">
                             Adresse email
                         </label>
-                        <input 
-                            id="email" 
-                            name="email" 
-                            type="email" 
-                            required 
-                            autofocus
-                            value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
-                            placeholder="nom@exemple.fr"
-                            class="input-field w-full px-4 py-3.5 rounded-full text-base"
-                        />
+                        <input id="email" name="email" type="email" required autofocus
+                            value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" placeholder="nom@exemple.fr"
+                            class="input-field w-full px-4 py-3.5 rounded-full text-base" />
                     </div>
 
                     <!-- Info box -->
@@ -310,9 +332,10 @@ ob_start();
                             </p>
                         </div>
                     </div>
-                    
+
                     <!-- Bouton submit -->
-                    <button type="submit" class="btn-primary w-full text-white font-semibold py-3.5 rounded-full text-base shadow-lg">
+                    <button type="submit"
+                        class="btn-primary w-full text-white font-semibold py-3.5 rounded-full text-base shadow-lg">
                         <i class="fas fa-paper-plane mr-2"></i>
                         Envoyer les instructions
                     </button>
@@ -328,12 +351,12 @@ ob_start();
                         Si un compte existe avec cette adresse, vous recevrez un email avec les instructions.
                     </p>
                     <div class="space-y-3">
-                        <a href="login.php" 
+                        <a href="login.php"
                             class="block w-full text-center px-6 py-3 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-full font-semibold hover:from-green-500 hover:to-green-700 transition-all duration-200 shadow-sm">
                             <i class="fas fa-sign-in-alt mr-2"></i>
                             Retour à la connexion
                         </a>
-                        <button onclick="location.reload()" 
+                        <button onclick="location.reload()"
                             class="block w-full text-center px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-full font-medium hover:bg-gray-50 transition-all duration-200">
                             <i class="fas fa-redo mr-2"></i>
                             Renvoyer un email
@@ -342,18 +365,13 @@ ob_start();
                 </div>
             <?php endif; ?>
 
-            <!-- Lien retour connexion -->
-            <div class="mt-8 text-center">
-                <a href="login.php" class="text-sm text-gray-600 hover:text-green-600 transition-colors inline-flex items-center">
-                    <i class="fas fa-arrow-left mr-2"></i>
-                    Retour à la connexion
-                </a>
-            </div>
-            
+           
+
         </div>
     </div>
 
 </body>
+
 </html>
 
 <?php
